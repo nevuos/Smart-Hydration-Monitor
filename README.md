@@ -28,3 +28,4 @@ Link Projeto Original e Scheme
 
 ## Nota
 Assegure-se de que todas as conexões elétricas estejam seguras e isoladas.
+Lembre-se que você não vai conseguir gravar seu código se estiver com RX e TX ligado na placa.
