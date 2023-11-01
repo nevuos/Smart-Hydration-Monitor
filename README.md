@@ -1,8 +1,7 @@
-
-# Monitoramento e Controle de Umidade do Solo com Arduino
+# Documentação do Projeto: Sistema Automatizado de Irrigação com Arduino
 
 ## Descrição
-Sistema Arduino para monitorar e controlar a umidade do solo, com comunicação Bluetooth e controle automático de bomba de água.
+Este projeto utiliza um Arduino para monitorar e controlar a umidade do solo, empregando um sensor de umidade, um módulo Bluetooth para comunicação, e um sistema de controle automático para uma bomba de água. Ideal para projetos de jardinagem e agricultura inteligente.
 
 ## Componentes
 - Arduino (Uno, Mega, etc.)
@@ -12,20 +11,24 @@ Sistema Arduino para monitorar e controlar a umidade do solo, com comunicação 
 - Bomba de Água
 
 ## Funcionamento
-- Lê a umidade do solo e a envia via Bluetooth.
-- Controla automaticamente uma bomba de água com base na umidade do solo.
+- O sistema lê a umidade do solo e a envia em tempo real via Bluetooth.
+- Controla automaticamente uma bomba de água com base na umidade detectada no solo.
 
 ## Instalação
-1. Conecte os componentes conforme indicado no código.
-2. Carregue o código no Arduino.
-3. Use o monitor serial ou um app de terminal Bluetooth para ler os dados.
+1. Conecte o sensor de umidade do solo ao Arduino.
+2. Conecte o módulo Bluetooth HC-05 nos pinos apropriados do Arduino.
+3. Ligue o relé ao Arduino e à bomba de água.
+4. Carregue o código no Arduino.
+5. Utilize um monitor serial ou um app de terminal Bluetooth para ler os dados de umidade e controlar a bomba de água remotamente.
 
 ## Código
-O código para este projeto pode ser baixado abaixo:
+O código para este projeto foi otimizado com um Filtro de Kalman para leituras mais estáveis e contém funcionalidades de controle e monitoramento avançado. Ele pode ser baixado no link abaixo:
 [Link para Download do Código](https://github.com/nevuos/Smart-Hydration-Monitor/archive/refs/heads/main.zip)
-Link Projeto Original e Scheme 
+
+## Projeto Original e Esquema
+Para mais informações, referências e esquemas de montagem, consulte o projeto original:
 [Link para Projeto Original](https://circuitdigest.com/microcontroller-projects/automatic-irrigation-system-using-arduino-uno)
 
 ## Nota
-Assegure-se de que todas as conexões elétricas estejam seguras e isoladas.
-Lembre-se que você não vai conseguir gravar seu código se estiver com RX e TX ligado na placa.
+- Assegure-se de que todas as conexões elétricas estejam seguras e isoladas.
+- Lembre-se de desconectar os pinos RX e TX do módulo Bluetooth ao carregar o código no Arduino.
