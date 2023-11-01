@@ -23,7 +23,7 @@ Sistema Arduino para monitorar e controlar a umidade do solo, com comunicação 
 ## Código
 O código para este projeto pode ser baixado abaixo:
 [Link para Download do Código](https://github.com/nevuos/Smart-Hydration-Monitor/archive/refs/heads/main.zip)
-[Link para Projeto Original]([https://github.com/nevuos/Smart-Hydration-Monitor/archive/refs/heads/main.zip](https://circuitdigest.com/microcontroller-projects/automatic-irrigation-system-using-arduino-uno#:~:text=,town%20for%20weeks%20or%20months)https://circuitdigest.com/microcontroller-projects/automatic-irrigation-system-using-arduino-uno#:~:text=,town%20for%20weeks%20or%20months)
+[Link para Projeto Original](https://circuitdigest.com/microcontroller-projects/automatic-irrigation-system-using-arduino-uno)
 
 ## Nota
 Assegure-se de que todas as conexões elétricas estejam seguras e isoladas.
