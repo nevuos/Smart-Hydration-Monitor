@@ -1,67 +1,116 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial BTSerial(10, 11); // RX, TX - Cria uma porta serial para comunicação Bluetooth nos pinos 10 (RX) e 11 (TX)
+SoftwareSerial BTSerial(10, 11); // RX, TX
 
-const int numReadings = 10;  // Número de leituras para calcular a média
-int readings[numReadings];   // Array para armazenar as leituras do sensor
-int readIndex = 0;           // Índice atual no array de leituras
-int total = 0;               // Total acumulado das leituras para calcular a média
-int average = 0;             // Média das leituras
+// Configurações do sensor e leituras
+const int numReadings = 10;
+int readings[numReadings];
+int readIndex = 0;           
+int total = 0;
 
-int soilMoistureValue = 0;   // Valor atual de umidade do solo
-int percentage = 0;          // Umidade do solo em percentagem baseada na média
-int instantPercentage = 0;   // Umidade do solo em percentagem baseada na leitura instantânea
-int displayedPercentage = -1;  // Última percentagem exibida. Inicializada com -1 para garantir a primeira atualização
-const int threshold = 10;    // Limiar para considerar uma mudança significativa na umidade
+// Estados e parâmetros do Filtro de Kalman
+float kalman_gain = 0.0;
+float estimate = 0.0;
+float estimate_error = 2.0; // Erro de estimativa
+float measurement_error = 3.0; // Erro de medição do sensor
+
+// Parâmetros do controle da bomba
+bool pumpState = false;
+int lowerThreshold = 60;
+int upperThreshold = 65;
+
+unsigned long lastPumpTime = 0;
+const unsigned long pumpInterval = 3600000; // Intervalo para controle baseado em tempo (1 hora)
 
 void setup() {
-  pinMode(3, OUTPUT);        // Configura o pino 3 como saída (para a bomba)
-  Serial.begin(9600);        // Inicia comunicação serial com o computador
-  BTSerial.begin(9600);      // Inicia comunicação serial Bluetooth
+  pinMode(3, OUTPUT);
+  Serial.begin(9600);
+  BTSerial.begin(9600);
+  initializeReadings();
+}
 
-  // Inicializa o array de leituras com 0
+void loop() {
+  handleBluetoothCommands();
+
+  int percentage = readAndFilterSoilMoisture();
+  if (percentage == -1) {
+    sendAlert("Sensor error!");
+    return;
+  }
+
+  updateStatus(percentage); // Enviar status atual para Serial e Bluetooth
+  controlPump(percentage);
+  timeBasedPumpControl();
+  delay(1000);
+}
+
+void initializeReadings() {
   for (int i = 0; i < numReadings; i++) {
     readings[i] = 0;
   }
 }
 
-void loop() {
-  // Lê a umidade atual do solo
-  soilMoistureValue = analogRead(A0);
-  total = total - readings[readIndex];
-  readings[readIndex] = soilMoistureValue;
-  total = total + readings[readIndex];
-  readIndex = (readIndex + 1) % numReadings;
-  average = total / numReadings;
-
-  // Mapeia a média e a leitura instantânea para percentagens
-  percentage = map(average, 610, 1023, 100, 0);
-  instantPercentage = map(soilMoistureValue, 610, 1023, 100, 0);
-
-  // Atualiza a percentagem exibida se houver uma mudança significativa
-  if (abs(instantPercentage - displayedPercentage) > threshold || displayedPercentage == -1) {
-    displayedPercentage = instantPercentage;
+void handleBluetoothCommands() {
+  if (BTSerial.available()) {
+    char c = BTSerial.read();
+    // Ajuste dos limites de umidade via Bluetooth
+    if (c == 'L') lowerThreshold = BTSerial.parseInt();
+    if (c == 'U') upperThreshold = BTSerial.parseInt();
   }
+}
 
-  // Envia a umidade do solo para o Serial Monitor e via Bluetooth
+int readAndFilterSoilMoisture() {
+  int reading = analogRead(A0);
+  if (reading < 0 || reading > 1023) return -1; // Verificação de erro de leitura
+
+  return applyKalmanFilter(reading);
+}
+
+int applyKalmanFilter(int reading) {
+  float measurement = map(reading, 355, 1023, 100, 0);
+  kalman_gain = estimate_error / (estimate_error + measurement_error);
+  estimate = estimate + kalman_gain * (measurement - estimate);
+  estimate_error = (1.0 - kalman_gain) * estimate_error;
+  return (int)estimate;
+}
+
+void controlPump(int moisturePercentage) {
+  if (!pumpState && moisturePercentage < lowerThreshold) {
+    pumpOn();
+  } else if (pumpState && moisturePercentage > upperThreshold) {
+    pumpOff();
+  }
+}
+
+void pumpOn() {
+  digitalWrite(3, LOW);
+  pumpState = true;
+  Serial.println(" - Pump on");
+  BTSerial.println(" - Pump on");
+}
+
+void pumpOff() {
+  digitalWrite(3, HIGH);
+  pumpState = false;
+  Serial.println(" - Pump off");
+  BTSerial.println(" - Pump off");
+}
+
+void timeBasedPumpControl() {
+  if (millis() - lastPumpTime > pumpInterval && !pumpState) {
+    pumpOn();
+    lastPumpTime = millis();
+  }
+}
+
+void updateStatus(int moisturePercentage) {
   Serial.print("Soil Moisture: ");
-  Serial.print(displayedPercentage);
+  Serial.println(moisturePercentage);
   BTSerial.print("Soil Moisture: ");
-  BTSerial.print(displayedPercentage);
+  BTSerial.println(moisturePercentage);
+}
 
-  // Controla a bomba e envia status via Serial e Bluetooth
-  if (instantPercentage < 10) {
-    Serial.println(" - Pump on");
-    BTSerial.println(" - Pump on");
-    digitalWrite(3, LOW);  // Liga a bomba
-  } else if (instantPercentage > 80) {
-    Serial.println(" - Pump off");
-    BTSerial.println(" - Pump off");
-    digitalWrite(3, HIGH); // Desliga a bomba
-  } else {
-    Serial.println();
-    BTSerial.println();
-  }
-
-  delay(1000);  // Espera 1 segundo antes da próxima leitura
+void sendAlert(String message) {
+  Serial.println(message);
+  BTSerial.println(message);
 }
